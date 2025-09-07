@@ -1,18 +1,30 @@
 import SwiftUI
+import Vision
 
 struct CaseDetailView: View {
     @EnvironmentObject private var repo: AppRepository
     let caseId: UUID
+    @State private var standardizedBefore: UIImage?
+    @State private var showingConsent = false
+    @State private var showingShare = false
+    @State private var shareItems: [Any] = []
 
     var body: some View {
         VStack(spacing: 16) {
             if let scase = repo.db.cases.first(where: { $0.id == caseId }) {
                 Text(scase.title).font(.title3).bold()
-                CompareView(before: scase.beforePhoto.flatMap(repo.loadPhotoData).flatMap(UIImage.init(data:)),
+                CompareView(before: displayBefore(for: scase),
                             after: scase.afterPhoto.flatMap(repo.loadPhotoData).flatMap(UIImage.init(data:)))
                     .frame(height: 320)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.gray.opacity(0.2)))
+                HStack {
+                    Button("Schedule 1w Follow-up") { scheduleFollowUp() }
+                    Spacer()
+                    Button("Consent") { showingConsent = true }
+                    Button("Share") { shareCase() }
+                }
+                .buttonStyle(.bordered)
                 Spacer()
             } else {
                 Text("Case not found").foregroundStyle(.secondary)
@@ -21,6 +33,54 @@ struct CaseDetailView: View {
         .padding()
         .navigationTitle("Case")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Standardize") { standardize() }
+            }
+        }
+        .sheet(isPresented: $showingConsent) {
+            ConsentView(caseId: caseId).environmentObject(repo)
+        }
+        .sheet(isPresented: $showingShare) {
+            ActivityView(activityItems: shareItems)
+        }
+    }
+
+    private func displayBefore(for scase: SurgicalCase) -> UIImage? {
+        if let standardizedBefore { return standardizedBefore }
+        return scase.beforePhoto.flatMap(repo.loadPhotoData).flatMap(UIImage.init(data:))
+    }
+
+    private func standardize() {
+        guard let scase = repo.db.cases.first(where: { $0.id == caseId }),
+              let data = scase.beforePhoto.flatMap(repo.loadPhotoData),
+              let image = UIImage(data: data) else { return }
+        let processor = VisionStandardizer()
+        standardizedBefore = processor.standardize(image)
+    }
+
+    private func scheduleFollowUp() {
+        let date = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date().addingTimeInterval(7*24*3600)
+        repo.scheduleReminder(for: caseId, at: date, message: "1 week after photos")
+    }
+
+    private func shareCase() {
+        guard let scase = repo.db.cases.first(where: { $0.id == caseId }) else { return }
+        let share = ShareService()
+        var items: [Any] = []
+        if let before = scase.beforePhoto.flatMap(repo.loadPhotoData).flatMap(UIImage.init(data:)) {
+            let wm = ShareService.Watermark(provider: "Provider", clinic: "Clinic", caseTitle: scase.title)
+            let img = share.watermarked(before, with: wm)
+            if let url = share.writeTempPNG(img) { items.append(url) }
+        }
+        if let after = scase.afterPhoto.flatMap(repo.loadPhotoData).flatMap(UIImage.init(data:)) {
+            let wm = ShareService.Watermark(provider: "Provider", clinic: "Clinic", caseTitle: scase.title)
+            let img = share.watermarked(after, with: wm)
+            if let url = share.writeTempPNG(img) { items.append(url) }
+        }
+        shareItems = items
+        repo.recordAudit(type: .shareExport, caseId: caseId, details: "exported \(items.count) images")
+        showingShare = true
     }
 }
 
@@ -31,12 +91,13 @@ private struct CompareView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let width = max(1, geo.size.width)
             ZStack(alignment: .leading) {
                 if let after {
                     Image(uiImage: after)
                         .resizable()
                         .scaledToFill()
-                        .frame(width: geo.size.width, height: geo.size.height)
+                        .frame(width: width, height: geo.size.height)
                         .clipped()
                 } else {
                     Color.secondary.opacity(0.1)
@@ -45,20 +106,25 @@ private struct CompareView: View {
                     Image(uiImage: before)
                         .resizable()
                         .scaledToFill()
-                        .frame(width: geo.size.width * progress, height: geo.size.height)
+                        .frame(width: width * progress, height: geo.size.height)
                         .clipped()
                 }
                 Rectangle()
                     .fill(.white)
                     .frame(width: 2)
-                    .offset(x: geo.size.width * progress - 1)
+                    .offset(x: width * progress - 1)
                 Circle()
                     .fill(.white)
                     .overlay(Circle().stroke(Color.black.opacity(0.15)))
                     .frame(width: 28, height: 28)
-                    .offset(x: geo.size.width * progress - 14)
+                    .offset(x: width * progress - 14)
                     .gesture(DragGesture(minimumDistance: 0).onChanged { value in
-                        progress = min(1, max(0, value.location.x / geo.size.width))
+                        let ratio = value.location.x / width
+                        if ratio.isNaN || !ratio.isFinite {
+                            progress = 0.5
+                        } else {
+                            progress = min(1, max(0, ratio))
+                        }
                     })
             }
         }

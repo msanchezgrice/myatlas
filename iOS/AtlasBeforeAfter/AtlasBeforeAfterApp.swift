@@ -5,6 +5,7 @@ struct AtlasBeforeAfterApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var appLockManager = AppLockManager()
     @AppStorage("didCompleteOnboarding") private var didCompleteOnboarding: Bool = false
+    @StateObject private var repo = AppRepository()
 
     var body: some Scene {
         WindowGroup {
@@ -12,6 +13,12 @@ struct AtlasBeforeAfterApp: App {
                 if didCompleteOnboarding {
                     ContentView()
                         .environmentObject(appLockManager)
+                        .environmentObject(repo)
+                        .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
+                            if UIScreen.main.isCaptured {
+                                repo.recordAudit(type: .screenCaptureDetected, caseId: nil, details: "Screen capture active")
+                            }
+                        }
                 } else {
                     OnboardingView(didCompleteOnboarding: $didCompleteOnboarding)
                         .environmentObject(appLockManager)
@@ -19,9 +26,7 @@ struct AtlasBeforeAfterApp: App {
             }
         }
         .onChange(of: scenePhase) { newPhase in
-            if newPhase != .active {
-                appLockManager.lock()
-            }
+            if newPhase == .background { appLockManager.lock() }
         }
     }
 }

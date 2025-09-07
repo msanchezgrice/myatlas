@@ -2,6 +2,8 @@ import SwiftUI
 
 struct LibraryView: View {
     @EnvironmentObject private var repo: AppRepository
+    @State private var showingNewCase: Bool = false
+    @State private var selectedProcedure: Procedure = .upperBlepharoplasty
 
     var body: some View {
         NavigationStack {
@@ -16,7 +18,10 @@ struct LibraryView: View {
                     NavigationLink(destination: CaseDetailView(caseId: scase.id).environmentObject(repo)) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(scase.title).font(.headline)
-                            Text(scase.specialty).font(.subheadline).foregroundStyle(.secondary)
+                            HStack(spacing: 8) {
+                                Text(scase.specialty).font(.subheadline)
+                                if let p = scase.procedure { Text("• \(p.rawValue)").font(.subheadline) }
+                            }.foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -24,7 +29,16 @@ struct LibraryView: View {
             .navigationTitle("Library")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: addExample) { Image(systemName: "plus") }
+                    Menu {
+                        Button("Quick Example") { addExample() }
+                        Divider()
+                        Picker("Procedure", selection: $selectedProcedure) {
+                            ForEach(Procedure.allCases) { p in Text(p.rawValue).tag(p) }
+                        }
+                        Button("New Case with Selected Procedure") { addWithProcedure(selectedProcedure) }
+                    } label: {
+                        Image(systemName: "plus")
+                    }
                 }
             }
         }
@@ -32,7 +46,12 @@ struct LibraryView: View {
 
     private func addExample() {
         let patient = repo.createPatient(fullName: "Jane Doe", dateOfBirth: nil)
-        _ = repo.createCase(for: patient.id, title: "Upper Blepharoplasty", specialty: "Oculoplastics")
+        _ = repo.createCase(for: patient.id, title: "Upper Blepharoplasty", specialty: "Oculoplastics", procedure: .upperBlepharoplasty)
+    }
+
+    private func addWithProcedure(_ procedure: Procedure) {
+        let patient = repo.createPatient(fullName: "Case Patient", dateOfBirth: nil)
+        _ = repo.createCase(for: patient.id, title: procedure.rawValue, specialty: "Oculoplastics", procedure: procedure)
     }
 }
 
