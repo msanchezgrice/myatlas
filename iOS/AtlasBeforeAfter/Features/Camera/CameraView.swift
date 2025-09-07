@@ -43,7 +43,21 @@ final class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDe
         }
         if session.canAddInput(input) { session.addInput(input) }
         if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
+        photoOutput.isHighResolutionCaptureEnabled = true
         session.commitConfiguration()
+
+        // Configure device for consistent capture settings
+        do {
+            try device.lockForConfiguration()
+            if device.isFocusModeSupported(.continuousAutoFocus) { device.focusMode = .continuousAutoFocus }
+            if device.isExposureModeSupported(.continuousAutoExposure) { device.exposureMode = .continuousAutoExposure }
+            if device.isWhiteBalanceModeSupported(.continuousAutoWhiteBalance) { device.whiteBalanceMode = .continuousAutoWhiteBalance }
+            if device.isLowLightBoostSupported { device.automaticallyEnablesLowLightBoostWhenAvailable = true }
+            // Ensure no zoom to keep consistency
+            device.videoZoomFactor = 1.0
+            device.unlockForConfiguration()
+        } catch { }
+
         isReady = true
     }
 
@@ -64,6 +78,11 @@ final class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDe
         guard photoOutput.connections.contains(where: { $0.isEnabled }) else { captureError = "No active camera connection"; return }
         capturedHandler = handler
         let settings = AVCapturePhotoSettings()
+        settings.isHighResolutionPhotoEnabled = true
+        if #available(iOS 16.0, *) {
+            settings.photoQualityPrioritization = .quality
+        }
+        settings.isAutoStillImageStabilizationEnabled = true
         photoOutput.capturePhoto(with: settings, delegate: self)
     }
 

@@ -35,7 +35,12 @@ struct CaseDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Standardize") { standardize() }
+                Menu {
+                    Button("Preview Standardized") { standardize(previewOnly: true) }
+                    Button("Replace Before with Standardized") { standardize(previewOnly: false) }
+                } label: {
+                    Text("Standardize")
+                }
             }
         }
         .sheet(isPresented: $showingConsent) {
@@ -51,12 +56,19 @@ struct CaseDetailView: View {
         return scase.beforePhoto.flatMap(repo.loadPhotoData).flatMap(UIImage.init(data:))
     }
 
-    private func standardize() {
+    private func standardize(previewOnly: Bool) {
         guard let scase = repo.db.cases.first(where: { $0.id == caseId }),
               let data = scase.beforePhoto.flatMap(repo.loadPhotoData),
               let image = UIImage(data: data) else { return }
         let processor = VisionStandardizer()
-        standardizedBefore = processor.standardize(image)
+        guard let output = processor.standardize(image) else { return }
+        if previewOnly {
+            standardizedBefore = output
+        } else {
+            standardizedBefore = output
+            // Persist standardized output as the new before
+            try? repo.attachPhoto(to: caseId, image: output, isBefore: true)
+        }
     }
 
     private func scheduleFollowUp() {
@@ -68,7 +80,7 @@ struct CaseDetailView: View {
         guard let scase = repo.db.cases.first(where: { $0.id == caseId }) else { return }
         let share = ShareService()
         var items: [Any] = []
-        if let before = scase.beforePhoto.flatMap(repo.loadPhotoData).flatMap(UIImage.init(data:)) {
+        if let before = displayBefore(for: scase) {
             let wm = ShareService.Watermark(provider: "Provider", clinic: "Clinic", caseTitle: scase.title)
             let img = share.watermarked(before, with: wm)
             if let url = share.writeTempPNG(img) { items.append(url) }

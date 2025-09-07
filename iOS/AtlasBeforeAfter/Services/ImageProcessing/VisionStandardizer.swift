@@ -74,6 +74,7 @@ final class VisionStandardizer {
         return crop(image: scaled, rect: cropRect) ?? scaled
     }
 
+    // MARK: - Helpers
     private func rotate(image: UIImage, angle: CGFloat, around pivot: CGPoint, background: UIColor) -> UIImage? {
         guard let cg = image.cgImage else { return nil }
         let size = CGSize(width: cg.width, height: cg.height)
