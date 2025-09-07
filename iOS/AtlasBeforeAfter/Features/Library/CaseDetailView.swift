@@ -8,47 +8,59 @@ struct CaseDetailView: View {
     @State private var showingConsent = false
     @State private var showingShare = false
     @State private var shareItems: [Any] = []
+    @State private var showBeforePicker = false
+    @State private var showAfterPicker = false
 
     var body: some View {
-        VStack(spacing: 16) {
-            if let scase = repo.db.cases.first(where: { $0.id == caseId }) {
-                Text(scase.title).font(.title3).bold()
-                CompareView(before: displayBefore(for: scase),
-                            after: scase.afterPhoto.flatMap(repo.loadPhotoData).flatMap(UIImage.init(data:)))
-                    .frame(height: 320)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.gray.opacity(0.2)))
-                HStack {
-                    Button("Schedule 1w Follow-up") { scheduleFollowUp() }
-                    Spacer()
-                    Button("Consent") { showingConsent = true }
-                    Button("Share") { shareCase() }
+        ScrollView {
+            VStack(spacing: 16) {
+                if let scase = repo.db.cases.first(where: { $0.id == caseId }) {
+                    CompareView(before: displayBefore(for: scase),
+                                after: scase.afterPhoto.flatMap(repo.loadPhotoData).flatMap(UIImage.init(data:)))
+                        .frame(height: 360)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.gray.opacity(0.2)))
+
+                    HStack(spacing: 12) {
+                        Button("Schedule…") { scheduleFollowUp() }
+                        Spacer()
+                        Button("Consent") { showingConsent = true }
+                        Button("Share") { shareCase() }
+                    }
+                    .buttonStyle(.bordered)
+
+                    HStack(spacing: 12) {
+                        Button("Import Before") { showBeforePicker = true }
+                        Button("Import After") { showAfterPicker = true }
+                    }
+                    .buttonStyle(.bordered)
+                } else {
+                    Text("Case not found").foregroundStyle(.secondary)
                 }
-                .buttonStyle(.bordered)
-                Spacer()
-            } else {
-                Text("Case not found").foregroundStyle(.secondary)
             }
+            .padding()
         }
-        .padding()
-        .navigationTitle("Case")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(caseTitle)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button("Preview Standardized") { standardize(previewOnly: true) }
                     Button("Replace Before with Standardized") { standardize(previewOnly: false) }
-                } label: {
-                    Text("Standardize")
-                }
+                } label: { Text("Standardize") }
             }
         }
-        .sheet(isPresented: $showingConsent) {
-            ConsentView(caseId: caseId).environmentObject(repo)
+        .sheet(isPresented: $showingConsent) { ConsentView(caseId: caseId).environmentObject(repo) }
+        .sheet(isPresented: $showingShare) { ActivityView(activityItems: shareItems) }
+        .sheet(isPresented: $showBeforePicker) {
+            PhotoPicker { img in try? repo.attachPhoto(to: caseId, image: img, isBefore: true) }
         }
-        .sheet(isPresented: $showingShare) {
-            ActivityView(activityItems: shareItems)
+        .sheet(isPresented: $showAfterPicker) {
+            PhotoPicker { img in try? repo.attachPhoto(to: caseId, image: img, isBefore: false) }
         }
+    }
+
+    private var caseTitle: String {
+        repo.db.cases.first(where: { $0.id == caseId })?.title ?? "Case"
     }
 
     private func displayBefore(for scase: SurgicalCase) -> UIImage? {
@@ -62,13 +74,8 @@ struct CaseDetailView: View {
               let image = UIImage(data: data) else { return }
         let processor = VisionStandardizer()
         guard let output = processor.standardize(image) else { return }
-        if previewOnly {
-            standardizedBefore = output
-        } else {
-            standardizedBefore = output
-            // Persist standardized output as the new before
-            try? repo.attachPhoto(to: caseId, image: output, isBefore: true)
-        }
+        if previewOnly { standardizedBefore = output }
+        else { standardizedBefore = output; try? repo.attachPhoto(to: caseId, image: output, isBefore: true) }
     }
 
     private func scheduleFollowUp() {
@@ -104,21 +111,21 @@ private struct CompareView: View {
     var body: some View {
         GeometryReader { geo in
             let width = max(1, geo.size.width)
+            let height = max(1, geo.size.height)
             ZStack(alignment: .leading) {
                 if let after {
                     Image(uiImage: after)
                         .resizable()
                         .scaledToFill()
-                        .frame(width: width, height: geo.size.height)
+                        .frame(width: width, height: height)
                         .clipped()
-                } else {
-                    Color.secondary.opacity(0.1)
-                }
+                } else { Color.secondary.opacity(0.1) }
+
                 if let before {
                     Image(uiImage: before)
                         .resizable()
                         .scaledToFill()
-                        .frame(width: width * progress, height: geo.size.height)
+                        .frame(width: width * progress, height: height)
                         .clipped()
                 }
                 Rectangle()
@@ -132,11 +139,7 @@ private struct CompareView: View {
                     .offset(x: width * progress - 14)
                     .gesture(DragGesture(minimumDistance: 0).onChanged { value in
                         let ratio = value.location.x / width
-                        if ratio.isNaN || !ratio.isFinite {
-                            progress = 0.5
-                        } else {
-                            progress = min(1, max(0, ratio))
-                        }
+                        progress = ratio.isFinite ? min(1, max(0, ratio)) : 0.5
                     })
             }
         }

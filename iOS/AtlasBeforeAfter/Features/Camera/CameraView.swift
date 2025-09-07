@@ -14,6 +14,12 @@ final class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDe
     }
 
     func requestAndPrepare() {
+        #if targetEnvironment(simulator)
+        // Simulator has no camera
+        isAuthorized = false
+        isReady = false
+        captureError = "Camera unavailable"
+        #else
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         switch status {
         case .authorized:
@@ -30,6 +36,7 @@ final class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDe
             isAuthorized = false
             captureError = "Camera permission denied. Enable in Settings."
         }
+        #endif
     }
 
     private func configureSession() {
@@ -43,17 +50,17 @@ final class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDe
         }
         if session.canAddInput(input) { session.addInput(input) }
         if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
-        photoOutput.isHighResolutionCaptureEnabled = true
+        if #available(iOS 16.0, *) {
+            photoOutput.maxPhotoDimensions = .init(width: 4032, height: 3024)
+        }
         session.commitConfiguration()
 
-        // Configure device for consistent capture settings
         do {
             try device.lockForConfiguration()
             if device.isFocusModeSupported(.continuousAutoFocus) { device.focusMode = .continuousAutoFocus }
             if device.isExposureModeSupported(.continuousAutoExposure) { device.exposureMode = .continuousAutoExposure }
             if device.isWhiteBalanceModeSupported(.continuousAutoWhiteBalance) { device.whiteBalanceMode = .continuousAutoWhiteBalance }
             if device.isLowLightBoostSupported { device.automaticallyEnablesLowLightBoostWhenAvailable = true }
-            // Ensure no zoom to keep consistency
             device.videoZoomFactor = 1.0
             device.unlockForConfiguration()
         } catch { }
@@ -68,28 +75,24 @@ final class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDe
         }
     }
 
-    func stop() {
-        guard session.isRunning else { return }
-        session.stopRunning()
-    }
+    func stop() { guard session.isRunning else { return }; session.stopRunning() }
 
     func capture(_ handler: @escaping (Data) -> Void) {
+        #if targetEnvironment(simulator)
+        captureError = "Use Import on Simulator"
+        #else
         guard session.isRunning else { captureError = "Camera not ready"; return }
         guard photoOutput.connections.contains(where: { $0.isEnabled }) else { captureError = "No active camera connection"; return }
         capturedHandler = handler
         let settings = AVCapturePhotoSettings()
-        settings.isHighResolutionPhotoEnabled = true
-        if #available(iOS 16.0, *) {
-            settings.photoQualityPrioritization = .quality
-        }
-        settings.isAutoStillImageStabilizationEnabled = true
+        if #available(iOS 16.0, *) { settings.photoQualityPrioritization = .quality }
         photoOutput.capturePhoto(with: settings, delegate: self)
+        #endif
     }
 
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
-        if let data = photo.fileDataRepresentation() {
-            capturedHandler?(data)
-        } else if let error { captureError = error.localizedDescription }
+        if let data = photo.fileDataRepresentation() { capturedHandler?(data) }
+        else if let error { captureError = error.localizedDescription }
     }
 }
 
@@ -98,18 +101,22 @@ struct CameraPreview: UIViewRepresentable {
 
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
+        #if !targetEnvironment(simulator)
         let layer = AVCaptureVideoPreviewLayer(session: session)
         layer.videoGravity = .resizeAspectFill
         layer.frame = view.bounds
         view.layer.addSublayer(layer)
+        #endif
         return view
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
+        #if !targetEnvironment(simulator)
         if let layer = (uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer) {
             layer.session = session
             layer.frame = uiView.bounds
         }
+        #endif
     }
 }
 
@@ -133,11 +140,13 @@ struct CameraView: View {
     @EnvironmentObject private var repo: AppRepository
     @State private var toast: String?
     @State private var showGrid: Bool = true
+    @State private var showPicker: Bool = false
 
     var body: some View {
         ZStack {
             CameraPreview(session: model.session)
                 .ignoresSafeArea()
+                .background(Color(.systemBackground))
             if showGrid { AlignmentOverlay().ignoresSafeArea() }
 
             VStack {
@@ -151,15 +160,21 @@ struct CameraView: View {
                 }
                 .padding()
                 Spacer()
-                Button(action: onCapture) {
-                    Circle()
-                        .fill(model.isAuthorized && model.isReady && model.session.isRunning ? .white : .gray)
-                        .frame(width: 72, height: 72)
-                        .overlay(Circle().stroke(Color.black.opacity(0.2), lineWidth: 2))
-                        .shadow(radius: 2)
+                HStack(spacing: 20) {
+                    #if targetEnvironment(simulator)
+                    Button("Import") { showPicker = true }
+                        .buttonStyle(.borderedProminent)
+                    #endif
+                    Button(action: onCapture) {
+                        Circle()
+                            .fill(model.isAuthorized && model.isReady && model.session.isRunning ? .white : .gray)
+                            .frame(width: 72, height: 72)
+                            .overlay(Circle().stroke(Color.black.opacity(0.2), lineWidth: 2))
+                            .shadow(radius: 2)
+                    }
+                    .disabled(!(model.isAuthorized && model.isReady && model.session.isRunning))
                 }
                 .padding(.bottom, 32)
-                .disabled(!(model.isAuthorized && model.isReady && model.session.isRunning))
             }
 
             if let toast { Text(toast).padding().background(.thinMaterial, in: Capsule()).padding(.bottom, 120).frame(maxHeight: .infinity, alignment: .bottom) }
@@ -167,20 +182,27 @@ struct CameraView: View {
         }
         .onAppear { model.requestAndPrepare(); DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { model.start() } }
         .onDisappear { model.stop() }
+        .sheet(isPresented: $showPicker) {
+            PhotoPicker { img in
+                saveCaptured(img)
+            }
+        }
     }
 
     private func onCapture() {
         model.capture { data in
-            if let img = UIImage(data: data) {
-                if let latest = repo.db.cases.last {
-                    try? repo.attachPhoto(to: latest.id, image: img, isBefore: latest.beforePhoto == nil)
-                    DispatchQueue.main.async { toast = "Saved to \(latest.title)" }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { toast = nil }
-                } else {
-                    DispatchQueue.main.async { toast = "No case. Add one in Library." }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { toast = nil }
-                }
-            }
+            if let img = UIImage(data: data) { saveCaptured(img) }
+        }
+    }
+
+    private func saveCaptured(_ img: UIImage) {
+        if let latest = repo.db.cases.last {
+            try? repo.attachPhoto(to: latest.id, image: img, isBefore: latest.beforePhoto == nil)
+            DispatchQueue.main.async { toast = "Saved to \(latest.title)" }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { toast = nil }
+        } else {
+            DispatchQueue.main.async { toast = "No case. Add one in Library." }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { toast = nil }
         }
     }
 }
