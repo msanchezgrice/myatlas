@@ -1,0 +1,29 @@
+# Xcode
+DerivedData/
+build/
+*.xcworkspace
+*.xcuserdatad/
+*.xcuserdata/
+*.moved-aside
+
+# SwiftPM
+.build/
+
+# Cocoapods, Carthage (not used yet)
+Pods/
+Carthage/
+
+# iOS
+*.ipa
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# User files
+*.DS_Store
+
+# App data (never commit runtime encrypted data)
+iOS/AtlasBeforeAfter/AppData/

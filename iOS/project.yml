@@ -1,0 +1,30 @@
+name: AtlasBeforeAfter
+options:
+  deploymentTarget:
+    iOS: "16.0"
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: 5.10
+    IPHONEOS_DEPLOYMENT_TARGET: 16.0
+    CODE_SIGN_STYLE: Automatic
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  AtlasBeforeAfter:
+    type: application
+    platform: iOS
+    sources:
+      - path: AtlasBeforeAfter
+    info:
+      path: AtlasBeforeAfter/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.miguel.AtlasBeforeAfter
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 0.1.0
+    scheme:
+      testTargets: []
