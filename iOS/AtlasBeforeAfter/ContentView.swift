@@ -16,6 +16,7 @@ struct ContentView: View {
                     .tabItem { Label("Camera", systemImage: "camera") }
 
                 RemindersView()
+                    .environmentObject(repo)
                     .tabItem { Label("Reminders", systemImage: "bell.badge") }
 
                 SettingsView()

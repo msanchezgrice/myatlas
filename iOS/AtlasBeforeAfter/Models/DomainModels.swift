@@ -36,6 +36,7 @@ struct PhotoAsset: Identifiable, Codable, Equatable {
     var relativePath: String // path within encrypted store
     var capturedAt: Date
     var notes: String?
+    var tags: [String] = []
 }
 
 struct Reminder: Identifiable, Codable, Equatable {

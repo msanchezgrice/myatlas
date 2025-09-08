@@ -44,13 +44,26 @@ final class AppRepository: ObservableObject {
         let photoId = UUID()
         let relative = "photos/\(caseId.uuidString)/\(isBefore ? "before" : "after")-\(photoId.uuidString).jpg.enc"
         _ = try fileStore.write(data: data, to: relative)
-        let asset = PhotoAsset(id: photoId, relativePath: relative, capturedAt: Date(), notes: nil)
+        let asset = PhotoAsset(id: photoId, relativePath: relative, capturedAt: Date(), notes: nil, tags: [])
         if isBefore {
             db.cases[idx].beforePhoto = asset
         } else {
             db.cases[idx].afterPhoto = asset
         }
         save()
+    }
+
+    func addTag(_ tag: String, to asset: PhotoAsset) {
+        for i in 0..<db.cases.count {
+            if db.cases[i].beforePhoto?.id == asset.id {
+                if !(db.cases[i].beforePhoto?.tags.contains(tag) ?? false) { db.cases[i].beforePhoto?.tags.append(tag) }
+                save(); return
+            }
+            if db.cases[i].afterPhoto?.id == asset.id {
+                if !(db.cases[i].afterPhoto?.tags.contains(tag) ?? false) { db.cases[i].afterPhoto?.tags.append(tag) }
+                save(); return
+            }
+        }
     }
 
     func loadPhotoData(_ asset: PhotoAsset) -> Data? {

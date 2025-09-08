@@ -19,12 +19,33 @@ targets:
     platform: iOS
     sources:
       - path: AtlasBeforeAfter
+    resources:
+      - path: AtlasBeforeAfter/Base.lproj/LaunchScreen.storyboard
     info:
       path: AtlasBeforeAfter/Info.plist
+      properties:
+        UILaunchStoryboardName: LaunchScreen
+        CFBundleIconName: AppIcon
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSCameraUsageDescription: "This app uses the camera to capture standardized clinical photos."
+        NSPhotoLibraryUsageDescription: "Allow access to import existing photos into cases."
+        NSPhotoLibraryAddUsageDescription: "Allow saving watermarked exports to your photo library."
+        NSMotionUsageDescription: "Used to show level indicators and enable auto-snap when level."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.miguel.AtlasBeforeAfter
         CURRENT_PROJECT_VERSION: 1
-        MARKETING_VERSION: 0.1.0
+        MARKETING_VERSION: 0.2.0
+        DEVELOPMENT_TEAM: MWNSK8J8X4
     scheme:
       testTargets: []
+      shared: true

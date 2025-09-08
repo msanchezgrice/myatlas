@@ -12,7 +12,15 @@ final class ShareService {
         let scale = image.scale
         let size = image.size
         UIGraphicsBeginImageContextWithOptions(size, true, scale)
-        image.draw(in: CGRect(origin: .zero, size: size))
+        var base = image
+        // Optional background replacement from Settings
+        if UserDefaults.standard.bool(forKey: "export.replaceBackground") {
+            let hex = (UserDefaults.standard.string(forKey: "export.bgColorHex") ?? "#FFFFFF").trimmingCharacters(in: .whitespaces)
+            let bg = UIColor(hex: hex) ?? .white
+            let replacer = BackgroundReplaceService()
+            base = replacer.replaceBackground(of: image, with: bg)
+        }
+        base.draw(in: CGRect(origin: .zero, size: size))
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .right
         let attrs: [NSAttributedString.Key: Any] = [
@@ -37,5 +45,17 @@ final class ShareService {
         guard let data = image.pngData() else { return nil }
         try? data.write(to: url, options: .atomic)
         return url
+    }
+}
+
+private extension UIColor {
+    convenience init?(hex: String) {
+        var s = hex
+        if s.hasPrefix("#") { s.removeFirst() }
+        guard s.count == 6, let v = Int(s, radix: 16) else { return nil }
+        let r = CGFloat((v >> 16) & 0xFF) / 255.0
+        let g = CGFloat((v >> 8) & 0xFF) / 255.0
+        let b = CGFloat(v & 0xFF) / 255.0
+        self.init(red: r, green: g, blue: b, alpha: 1)
     }
 }

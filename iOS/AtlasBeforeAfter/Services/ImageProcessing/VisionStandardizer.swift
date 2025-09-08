@@ -61,16 +61,34 @@ final class VisionStandardizer {
         let rightR = rightPt.applying(transform)
 
         // Scale so that inter-pupil distance matches target
-        let ipd = max(1, hypot(rightR.x - leftR.x, rightR.y - leftR.y))
-        let scale = options.targetInterPupilDistance / ipd
-        let scaledSize = CGSize(width: rotated.size.width * scale, height: rotated.size.height * scale)
+        let ipdRaw = hypot(rightR.x - leftR.x, rightR.y - leftR.y)
+        let ipd = ipdRaw.isFinite && ipdRaw > 0 ? ipdRaw : 1
+        let scaleRaw = options.targetInterPupilDistance / ipd
+        let scale = scaleRaw.isFinite && scaleRaw > 0.001 && scaleRaw < 1000 ? scaleRaw : 1
+        let scaledWidth = max(1, rotated.size.width * scale)
+        let scaledHeight = max(1, rotated.size.height * scale)
+        let scaledSize = CGSize(width: scaledWidth, height: scaledHeight)
         guard let scaled = resize(image: rotated, size: scaledSize) else { return rotated }
 
         // Crop centered on eyes to the output size
         let eyesCenterScaled = CGPoint(x: (leftR.x + rightR.x) / 2 * scale, y: (leftR.y + rightR.y) / 2 * scale)
         let cropOrigin = CGPoint(x: eyesCenterScaled.x - options.outputSize.width / 2,
                                   y: eyesCenterScaled.y - options.outputSize.height * 0.45) // bias slightly upward
-        let cropRect = CGRect(origin: cropOrigin, size: options.outputSize)
+        let rawCropRect = CGRect(origin: cropOrigin, size: options.outputSize)
+        // Clamp crop to image bounds
+        let maxX = scaled.size.width
+        let maxY = scaled.size.height
+        var cropRect = rawCropRect
+        if !rawCropRect.origin.x.isFinite || !rawCropRect.origin.y.isFinite {
+            cropRect.origin = .zero
+        }
+        cropRect.origin.x = min(max(0, cropRect.origin.x), maxX - 1)
+        cropRect.origin.y = min(max(0, cropRect.origin.y), maxY - 1)
+        cropRect.size.width = min(options.outputSize.width, maxX - cropRect.origin.x)
+        cropRect.size.height = min(options.outputSize.height, maxY - cropRect.origin.y)
+        if cropRect.size.width < 1 || cropRect.size.height < 1 {
+            return scaled
+        }
         return crop(image: scaled, rect: cropRect) ?? scaled
     }
 
@@ -92,6 +110,7 @@ final class VisionStandardizer {
     }
 
     private func resize(image: UIImage, size: CGSize) -> UIImage? {
+        guard size.width.isFinite, size.height.isFinite, size.width > 0, size.height > 0 else { return nil }
         UIGraphicsBeginImageContextWithOptions(size, true, image.scale)
         image.draw(in: CGRect(origin: .zero, size: size))
         let result = UIGraphicsGetImageFromCurrentImageContext()
@@ -102,10 +121,15 @@ final class VisionStandardizer {
     private func crop(image: UIImage, rect: CGRect) -> UIImage? {
         guard let cg = image.cgImage else { return nil }
         let scale = image.scale
-        let r = CGRect(x: max(0, rect.minX) * scale,
-                        y: max(0, rect.minY) * scale,
-                        width: min(rect.width, image.size.width - rect.minX) * scale,
-                        height: min(rect.height, image.size.height - rect.minY) * scale)
+        let safeMinX = max(0, rect.minX)
+        let safeMinY = max(0, rect.minY)
+        let safeWidth = min(rect.width, image.size.width - safeMinX)
+        let safeHeight = min(rect.height, image.size.height - safeMinY)
+        guard safeWidth.isFinite, safeHeight.isFinite, safeWidth > 0, safeHeight > 0 else { return nil }
+        let r = CGRect(x: safeMinX * scale,
+                        y: safeMinY * scale,
+                        width: safeWidth * scale,
+                        height: safeHeight * scale)
         guard let cropped = cg.cropping(to: r) else { return nil }
         return UIImage(cgImage: cropped, scale: scale, orientation: image.imageOrientation)
     }

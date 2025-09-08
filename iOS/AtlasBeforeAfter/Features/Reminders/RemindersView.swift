@@ -2,28 +2,46 @@ import SwiftUI
 import UserNotifications
 
 struct RemindersView: View {
+    @EnvironmentObject private var repo: AppRepository
+    @State private var selectedCaseId: UUID?
+    @State private var date: Date = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date().addingTimeInterval(7*24*3600)
+    @State private var message: String = "Follow-up photos"
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                Text("Follow-up Reminders").font(.title3).bold()
-                Button("Allow Notifications") {
-                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in }
+            List {
+                Section(header: Text("New Reminder")) {
+                    Picker("Case", selection: $selectedCaseId) {
+                        Text("Select Case").tag(UUID?.none)
+                        ForEach(repo.db.cases) { scase in
+                            Text(scase.title).tag(UUID?.some(scase.id))
+                        }
+                    }
+                    DatePicker("Date", selection: $date, displayedComponents: [.date, .hourAndMinute])
+                    TextField("Message", text: $message)
+                    Button {
+                        if let id = selectedCaseId { repo.scheduleReminder(for: id, at: date, message: message) }
+                    } label: { Label("Schedule", systemImage: "calendar.badge.plus") }
+                    .disabled(selectedCaseId == nil)
                 }
-                Button("Schedule test reminder (5s)") {
-                    let content = UNMutableNotificationContent()
-                    content.title = "Follow-up photos"
-                    content.body = "Time to capture after photos."
-                    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
-                    let req = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-                    UNUserNotificationCenter.current().add(req)
+
+                if !repo.db.reminders.isEmpty {
+                    Section(header: Text("Scheduled")) {
+                        ForEach(repo.db.reminders) { r in
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(r.message)
+                                    Text(r.fireDate.formatted(date: .abbreviated, time: .shortened)).font(.caption).foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Button(role: .destructive) { repo.cancelReminder(r.id) } label: { Image(systemName: "trash") }
+                            }
+                        }
+                    }
                 }
-                Spacer()
             }
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle("Reminders")
         }
     }
 }
 
-#Preview { RemindersView() }
+#Preview { RemindersView().environmentObject(AppRepository()) }

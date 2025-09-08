@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		067E93AB3BF97BFD769280DA /* AtlasBeforeAfterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6BE82AEDC03F3105434511 /* AtlasBeforeAfterApp.swift */; };
+		0CC9DDF0092D7818A81AFCB3 /* BackgroundReplaceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6591DB8246E59C50195C8C38 /* BackgroundReplaceService.swift */; };
 		246FC9EB18B32B1C4F7AA5C4 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDFFE37DE9C3D2298275B9E /* KeychainService.swift */; };
 		294C3124FB2B1DB469B3B2F1 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 725C9E96519EB6266B3270D0 /* LibraryView.swift */; };
 		373DD7A1E5A81D38DDEA4D41 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7938D679FC22F851A6A38511 /* ContentView.swift */; };
@@ -19,6 +20,7 @@
 		8A3120B6D8000125D4C9E280 /* CaseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F79C5810001B73AEB3C89C58 /* CaseDetailView.swift */; };
 		8A6C774E44867C16B9FFB271 /* DomainModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6D09974BEE3F9C589EF9641 /* DomainModels.swift */; };
 		8B80F6B050C7924BF26168B5 /* EncryptedFileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B127B05EF662F3447316A864 /* EncryptedFileStore.swift */; };
+		B2867FAC27871CAD6F177BDB /* ImageEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157AB466FD0EA36868313E87 /* ImageEditorView.swift */; };
 		B5E5E4D0D057648AB4EE0D07 /* PhotoPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD0789E6C191537F3246716F /* PhotoPicker.swift */; };
 		B7048B1BE98D356E669566D6 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE9D6F641C6EF5F031279D2F /* CameraView.swift */; };
 		C14B36FCF14B5331E2CBD2E4 /* AppLockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4620C59B1E62E8C639C0ADDC /* AppLockManager.swift */; };
@@ -29,10 +31,12 @@
 		D21C85DC82ED9D84B0E3507C /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054ACC070D4883D1B46884C6 /* ActivityView.swift */; };
 		E23794857CAD45C4A698DAB8 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4263A98D33A24D58F905B896 /* SettingsView.swift */; };
 		E98305FF4DED20B42A2F460E /* AppRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA4B79DF86DA70643491925 /* AppRepository.swift */; };
+		F5EFA1C931F07FF3653D2651 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6950D1631CD76C6C8A3D485A /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		054ACC070D4883D1B46884C6 /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
+		157AB466FD0EA36868313E87 /* ImageEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageEditorView.swift; sourceTree = "<group>"; };
 		1610D064E4917E87A96039F1 /* CryptoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CryptoService.swift; sourceTree = "<group>"; };
 		16B27EF41DA72179CDEA4E6F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4263A98D33A24D58F905B896 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -41,6 +45,7 @@
 		4E6BE82AEDC03F3105434511 /* AtlasBeforeAfterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtlasBeforeAfterApp.swift; sourceTree = "<group>"; };
 		5E426B645BEE9B76CE664B9C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		65168C4C0D0EB25901C5AB86 /* RemindersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindersView.swift; sourceTree = "<group>"; };
+		6591DB8246E59C50195C8C38 /* BackgroundReplaceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundReplaceService.swift; sourceTree = "<group>"; };
 		725C9E96519EB6266B3270D0 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		7938D679FC22F851A6A38511 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		80408183F28D66B8AFA16CB3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -51,6 +56,7 @@
 		B1219DB5C400BA398A991E55 /* LockScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenView.swift; sourceTree = "<group>"; };
 		B127B05EF662F3447316A864 /* EncryptedFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedFileStore.swift; sourceTree = "<group>"; };
 		B2B10CEEE931F4CE1019899C /* VisionStandardizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionStandardizer.swift; sourceTree = "<group>"; };
+		BA03BE4706041F93D8A95540 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		CE4A29EB1FD83830B63AB281 /* ShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>"; };
 		D32BD9E3BF2415921FDB996E /* EncryptedJSONStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedJSONStore.swift; sourceTree = "<group>"; };
 		E6D09974BEE3F9C589EF9641 /* DomainModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModels.swift; sourceTree = "<group>"; };
@@ -79,6 +85,7 @@
 		274D7FC991340371ACD5BC7C /* ImageProcessing */ = {
 			isa = PBXGroup;
 			children = (
+				6591DB8246E59C50195C8C38 /* BackgroundReplaceService.swift */,
 				B2B10CEEE931F4CE1019899C /* VisionStandardizer.swift */,
 			);
 			path = ImageProcessing;
@@ -112,6 +119,7 @@
 		75297C34B5833051A26D91E3 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				157AB466FD0EA36868313E87 /* ImageEditorView.swift */,
 				AD0789E6C191537F3246716F /* PhotoPicker.swift */,
 			);
 			path = Shared;
@@ -221,6 +229,7 @@
 				4E6BE82AEDC03F3105434511 /* AtlasBeforeAfterApp.swift */,
 				7938D679FC22F851A6A38511 /* ContentView.swift */,
 				80408183F28D66B8AFA16CB3 /* Info.plist */,
+				6950D1631CD76C6C8A3D485A /* LaunchScreen.storyboard */,
 				E44BF7F699C64CE051A7F4A4 /* Features */,
 				064C7F5E789CD5EC6036824C /* Models */,
 				EF3962AAA55085DF24B918E5 /* Services */,
@@ -280,6 +289,7 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					C2E6BA8D3E77472B00EA6025 = {
+						DevelopmentTeam = MWNSK8J8X4;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -309,6 +319,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC7B66AB3188C57595C469BD /* Assets.xcassets in Resources */,
+				F5EFA1C931F07FF3653D2651 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -323,6 +334,7 @@
 				C14B36FCF14B5331E2CBD2E4 /* AppLockManager.swift in Sources */,
 				E98305FF4DED20B42A2F460E /* AppRepository.swift in Sources */,
 				067E93AB3BF97BFD769280DA /* AtlasBeforeAfterApp.swift in Sources */,
+				0CC9DDF0092D7818A81AFCB3 /* BackgroundReplaceService.swift in Sources */,
 				B7048B1BE98D356E669566D6 /* CameraView.swift in Sources */,
 				8A3120B6D8000125D4C9E280 /* CaseDetailView.swift in Sources */,
 				C5173108A13DE01DE5F91C5C /* ConsentView.swift in Sources */,
@@ -331,6 +343,7 @@
 				8A6C774E44867C16B9FFB271 /* DomainModels.swift in Sources */,
 				8B80F6B050C7924BF26168B5 /* EncryptedFileStore.swift in Sources */,
 				7E8DBADE813939657E27C45D /* EncryptedJSONStore.swift in Sources */,
+				B2867FAC27871CAD6F177BDB /* ImageEditorView.swift in Sources */,
 				246FC9EB18B32B1C4F7AA5C4 /* KeychainService.swift in Sources */,
 				294C3124FB2B1DB469B3B2F1 /* LibraryView.swift in Sources */,
 				7480A0683138F1194F62B34A /* LockScreenView.swift in Sources */,
@@ -345,6 +358,17 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXVariantGroup section */
+		6950D1631CD76C6C8A3D485A /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BA03BE4706041F93D8A95540 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		5B7176FC0459F4800B13BC5D /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -352,12 +376,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MWNSK8J8X4;
 				INFOPLIST_FILE = AtlasBeforeAfter/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.miguel.AtlasBeforeAfter;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -436,12 +461,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MWNSK8J8X4;
 				INFOPLIST_FILE = AtlasBeforeAfter/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.miguel.AtlasBeforeAfter;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
